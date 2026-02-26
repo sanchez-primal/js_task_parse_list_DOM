@@ -1,31 +1,35 @@
 'use strict';
 
-function parseNumberFromSalaryTextValue(salaryTextValue) {
-  let salaryTextParsed = '';
+function extractNumberFromString(textValue) {
+  let extractedCharacters = '';
 
-  for (const char of salaryTextValue) {
+  for (const char of textValue) {
     if (isNaN(char)) {
       continue;
     }
 
-    salaryTextParsed += char;
+    extractedCharacters += char;
   }
 
-  return +salaryTextParsed;
+  return +extractedCharacters;
 }
 
 function getEmployees(list) {
-  return [...list.childNodes].filter(
-    (el) => el.nodeType === 1 && el.dataset.salary,
-  );
+  return [...list.childNodes]
+    .filter((el) => el.nodeType === 1 && el.dataset.salary)
+    .map((el) => ({
+      name: el.textContent.trim(),
+      position: el.dataset.position,
+      salary: extractNumberFromString(el.dataset.salary),
+      age: extractNumberFromString(el.dataset.age),
+    }));
 }
 
 function sortList(list) {
-  // [...list.querySelectorAll('li[data-salary]')]
   getEmployees(list)
     .sort((el1, el2) => {
-      const el1Salary = parseNumberFromSalaryTextValue(el1.dataset.salary);
-      const el2Salary = parseNumberFromSalaryTextValue(el2.dataset.salary);
+      const el1Salary = el1.salary;
+      const el2Salary = el2.salary;
 
       if (el1Salary > el2Salary) {
         return -1;
@@ -35,9 +39,21 @@ function sortList(list) {
         return 0;
       }
     })
-    .forEach((el) => list.insertAdjacentElement('beforeend', el));
+    .forEach((el) => {
+      /* I don't want to create new nodes and delete old ones
+       * when I can just rearrange existing ones
+       * because that teaches bad practices
+       */
+      const elNode = employees.find(
+        (employee) => employee.textContent.trim() === el.name,
+      );
+
+      list.insertAdjacentElement('beforeend', elNode);
+    });
 }
 
 const employeeList = document.querySelector('ul:has(>[data-salary]');
+
+const employees = [...document.querySelectorAll('ul>[data-salary]')];
 
 sortList(employeeList);
